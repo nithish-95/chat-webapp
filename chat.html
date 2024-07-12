@@ -46,8 +46,8 @@
 
             if (username !== name) {
                 var div = document.createElement("div");
-                div.className = "chat-message self-start bg-blue-500 text-white max-w-xs rounded-lg px-3 py-1.5 text-sm";
-                div.innerHTML = `<span class="text-xs font-semibold">${username}</span><br>${message}`;
+                div.className = "chat-message self-start bg-blue-500 text-white max-w-xs rounded-lg px-3 py-0.5 text-lg";
+                div.innerHTML = `<span class="text-xs text-gray-400 font-semibold">${username}</span><br>${message}`;
                 chat.appendChild(div);
                 chat.scrollTop = chat.scrollHeight; // Scroll to bottom
             }
@@ -69,8 +69,8 @@
             var message = text.value;
             ws.send("<" + name + "> " + message);
             var div = document.createElement("div");
-            div.className = "chat-message self-end bg-zinc-500 text-white max-w-xs rounded-lg px-3 py-1.5 text-sm";
-            div.innerHTML = `<span class="text-xs font-semibold">${name}</span><br>${message}`;
+            div.className = "chat-message self-end bg-blue-900 text-white max-w-xs rounded-lg px-3 py-0.5 text-lg";
+            div.innerHTML = `<span class="text-xs text-gray-400 font-semibold">${name}</span><br>${message}`;
             chat.appendChild(div);
             text.value = "";
             chat.scrollTop = chat.scrollHeight; // Scroll to bottom
