@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat-App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- everything default and using `weight: 100` -->
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100" rel="stylesheet" />
+</head>
+<body class="bg-black min-h-screen flex flex-col items-center justify-center">
+    <div class="w-full max-w-md mx-auto bg-gray-800 text-white rounded-xl shadow-lg overflow-hidden">
+        <div class="text-center text-2xl font-bold py-4 border-b border-gray-700">Chat - WebApp</div>
+        <div class="flex flex-col h-96">
+            <!-- chat box -->
+            <div id="chat" class="flex-1 p-4 overflow-y-auto bg-gray-900 text-left">
+                <!-- Chat messages will appear here -->
+            </div>
+            <!-- input area -->
+            <div class="p-4 border-t border-gray-700 bg-gray-800">
+                <div class="flex items-center">
+                    <input type="text" id="text" class="flex-1 p-2 rounded-lg bg-gray-700 text-white outline-none" placeholder="Type a message...">
+                    <button id="send" class="ml-2 px-4 py-2 bg-blue-600 rounded-lg">Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Ask for the user's name
+        var name = prompt("Please enter your name:", "Guest" + Math.floor(Math.random() * 1000));
+        if (name === null || name === "") {
+            name = "Guest" + Math.floor(Math.random() * 1000);
+        }
+
+        var url = "ws://" + window.location.host + "/ws";
+        var ws = new WebSocket(url);
+
+        var chat = document.getElementById("chat");
+        var text = document.getElementById("text");
+
+        var now = function () {
+            var iso = new Date().toISOString();
+            return iso.split("T")[1].split(".")[0];
+        };
+
+        ws.onmessage = function (msg) {
+            var line = now() + " " + msg.data + "\n";
+            chat.innerText += line;
+            chat.scrollTop = chat.scrollHeight; // Scroll to bottom
+        };
+
+        text.onkeydown = function (e) {
+            if (e.keyCode === 13 && text.value !== "") {
+                ws.send( name+": "+text.value);
+                text.value = "";
+            }
+        };
+
+        document.getElementById("send").onclick = function () {
+            if (text.value !== "") {
+                ws.send(name+": "+text.value);
+                text.value = "";
+            }
+        };
+    </script>
+</body>
+</html>
