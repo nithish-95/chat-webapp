@@ -12,6 +12,10 @@ func parseFile(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "index.html")
 }
 
+func parseChatFile(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "chat.html")
+}
+
 func main() {
 	r := chi.NewRouter()
 	m := melody.New()
@@ -19,6 +23,7 @@ func main() {
 	r.Use(middleware.Logger)
 
 	r.Get("/", parseFile)
+	r.Get("/chat", parseChatFile)
 
 	r.Get("/ws", func(w http.ResponseWriter, r *http.Request) {
 		m.HandleRequest(w, r)
