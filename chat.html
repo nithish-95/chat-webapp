@@ -5,27 +5,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat-App</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100" rel="stylesheet" />
 </head>
 <body class="bg-black min-h-screen flex flex-col items-center justify-center">
-    <div class="w-full max-w-md mx-auto bg-gray-800 text-white rounded-xl shadow-lg overflow-hidden">
+    <div class="w-full max-w-full h-screen mx-auto bg-gray-800 text-white shadow-lg overflow-hidden">
         <div class="text-center text-2xl font-bold py-4 border-b border-gray-700">Chat - WebApp</div>
-        <div class="flex flex-col h-96">
+        <div class="flex flex-col h-5/6">
             <!-- chat box -->
-            <div id="chat" class="flex-1 p-4 overflow-y-auto bg-gray-900 text-left flex flex-col space-y-4">
+            <div id="chat" class="flex-1 p-4 overflow-y-auto bg-gray-00 text-left flex flex-col space-y-4">
                 <!-- Messages will be dynamically added here -->
             </div>
+        </div>
+        <footer>
             <!-- input area -->
-            <div class="p-4 border-t border-gray-700 bg-gray-800">
+            <div class="p-4 border-t border-gray-600  bg-gray-800">
                 <div class="flex items-center">
                     <input type="text" id="text" class="flex-1 p-2 rounded-lg bg-gray-700 text-white outline-none" placeholder="Type a message...">
-                    <button id="send" class="ml-2 px-4 py-2 bg-blue-600 rounded-lg">Send</button>
+                    <button  id="send" class="ml-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 transition duration-300 ease-in-out rounded-lg">Send</button>
                 </div>
             </div>
-        </div>
+    
+        </footer>
     </div>
-
     <script>
+        // Function to get the WebSocket URL based on the current environment
+        function getWebSocketUrl() {
+            const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            return isLocal ? "ws://localhost:3000/ws" : "wss://web-chat.nithish.net/ws";
+        }
+
         // Get the user's name from the query parameter
         var urlParams = new URLSearchParams(window.location.search);
         var name = urlParams.get('name');
@@ -33,7 +40,7 @@
             name = "Guest" + Math.floor(Math.random() * 1000);
         }
 
-        var url = "ws://" + window.location.host + "/ws";
+        var url = getWebSocketUrl();
         var ws = new WebSocket(url);
 
         var chat = document.getElementById("chat");

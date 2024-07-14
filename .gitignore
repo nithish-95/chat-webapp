@@ -23,7 +23,5 @@ go.work.sum
 
 #pem files
 *.pem
-#js file
-*.js
 # Bin
 bin/
