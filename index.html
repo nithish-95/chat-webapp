@@ -9,20 +9,20 @@
 <body class="bg-gray-900 flex flex-col items-center justify-center min-h-screen text-white">
     <div class="w-full max-w-sm mx-auto bg-gray-800 text-white rounded-xl shadow-lg overflow-hidden p-6">
         <h2 class="text-2xl font-bold mb-4 text-center">Chat - WebApp</h2>
-        <form id="nameForm" action="/chat" method="get" class="flex-grow">
+        <form id="nameForm" class="flex-grow mb-4">
             <div class="mb-4">
-                <label for="name" class="block text-sm font-medium mb-2">Name</label>
-                <input type="text" id="name" name="name" placeholder="Your Name" class="w-full p-2 rounded-lg bg-gray-700 text-white outline-none" required>
+                <label for="UserName" class="block text-sm font-medium mb-2">User Name</label>
+                <input type="text" id="UserName" name="UserName" placeholder="User Name" class="w-full p-2 rounded-lg bg-gray-700 text-white outline-none" required>
             </div>
-            <button type="submit" class="w-full py-2 bg-blue-600 rounded-lg">Enter Chat</button>
+            <button type="submit" class="w-full py-2 bg-blue-600 rounded-lg">Next</button>
         </form>
     </div>
 
     <script>
         document.getElementById("nameForm").onsubmit = function(event) {
             event.preventDefault();
-            var name = document.getElementById("name").value;
-            window.location.href = "chat?name=" + encodeURIComponent(name);
+            var userName = document.getElementById("UserName").value;
+            window.location.href = "channels?UserName=" + encodeURIComponent(userName);
         };
     </script>
 </body>

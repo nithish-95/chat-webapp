@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Select Channel - Chat-App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 flex flex-col items-center justify-center min-h-screen text-white">
+    <div class="w-full max-w-4xl mx-auto min-h-screen bg-gray-800 text-white rounded-xl shadow-lg overflow-hidden p-6">
+        <h2 class="text-2xl font-bold mb-4 text-center">Chat - WebApp</h2>
+
+        <form id="channelForm" class="flex-grow">
+            <div class="mb-4 max-w-sm items-center justify-center">
+                <label for="Channel" class="block text-sm font-medium mb-2">Create or Join Channel</label>
+                <input type="text" id="Channel" name="Channel" placeholder="Channel Name" class="w-full p-2 rounded-lg bg-gray-700 text-white outline-none" required>
+            </div>
+            <button type="submit" class="w-full items-center justify-center max-w-sm py-2 bg-blue-600 rounded-lg">Enter Chat</button>
+        </form>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const userName = urlParams.get('UserName');
+
+        document.getElementById("channelForm").onsubmit = function(event) {
+            event.preventDefault();
+            var channel = document.getElementById("Channel").value;
+            window.location.href = `chat?UserName=${encodeURIComponent(userName)}&Channel=${encodeURIComponent(channel)}`;
+        };
+    </script>
+</body>
+</html>
