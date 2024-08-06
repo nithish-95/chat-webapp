@@ -22,7 +22,13 @@
         document.getElementById("nameForm").onsubmit = function(event) {
             event.preventDefault();
             var userName = document.getElementById("UserName").value;
-            window.location.href = "channels?UserName=" + encodeURIComponent(userName);
+            if (userName != ""){
+                window.location.href = "channels?UserName=" + encodeURIComponent(userName);
+            } else {
+
+            }
+
+            
         };
     </script>
 </body>
