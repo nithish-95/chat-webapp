@@ -3,88 +3,128 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat-App</title>
+    <title>Chat App</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Extract channel name and username from URL parameters
+        const urlParams = new URLSearchParams(window.location.search); 
+        const channelName = urlParams.get('Channel');
+        const userName = urlParams.get('UserName') || `Guest${Math.floor(Math.random() * 1000)}`;
+    </script>
 </head>
 <body class="bg-black min-h-screen flex flex-col items-center justify-center">
-    <div class="w-full max-w-full h-screen mx-auto bg-gray-800 text-white shadow-lg overflow-hidden">
-        <div class="text-center text-2xl font-bold py-4 border-b border-gray-700">Chat - WebApp</div>
-        <div class="flex flex-col h-5/6">
-            <!-- chat box -->
+    <div class="w-full max-w-full h-screen mx-auto bg-gray-800 text-white shadow-lg overflow-hidden flex flex-col">
+        <header class="text-center text-2xl font-bold py-4 border-b border-gray-700">
+            <div id="channel-name"></div>
+        </header>
+        
+        <main class="flex flex-col flex-1 overflow-hidden">
             <div id="chat" class="flex-1 p-4 overflow-y-auto bg-gray-900 text-left flex flex-col space-y-4">
                 <!-- Messages will be dynamically added here -->
             </div>
-        </div>
-        <footer>
-            <!-- input area -->
-            <div class="p-4 border-t border-gray-600 bg-gray-800">
-                <div class="flex items-center">
-                    <input type="text" id="text" class="flex-1 p-2 rounded-lg bg-gray-700 text-white outline-none" placeholder="Type a message...">
-                    <button id="send" class="ml-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 transition duration-300 ease-in-out rounded-lg">Send</button>
-                </div>
+        </main>
+        
+        <footer class="p-4 border-t border-gray-600 bg-gray-800">
+            <div class="flex items-center">
+                <input type="text" id="text" class="flex-1 p-2 rounded-lg bg-gray-700 text-white outline-none" placeholder="Type a message...">
+                <button id="send" class="ml-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 transition duration-300 ease-in-out rounded-lg">Send</button>
             </div>
         </footer>
     </div>
+
     <script>
-        // Function to get the WebSocket URL 
+        document.getElementById("channel-name").innerText = channelName;
+
         function getWebSocketUrl(channel) {
             const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
             return isLocal ? `ws://localhost:8080/ws/${channel}` : `wss://web-chat.nithish.net/ws/${channel}`;
         }
 
-        // Get the user's name and channel from the query parameters
-        var urlParams = new URLSearchParams(window.location.search);
-        var name = urlParams.get('UserName');
-        var channel = urlParams.get('Channel');
+        var name = urlParams.get('UserName') || "Guest" + Math.floor(Math.random() * 1000);
+        var channel = channelName;
         
-        if (!name) {
-            name = "Guest" + Math.floor(Math.random() * 1000);
-        }
-
         var url = getWebSocketUrl(channel);
-        var ws = new WebSocket(url);
+        var ws = new WebSocket(url + "?UserName=" + encodeURIComponent(name));
 
         var chat = document.getElementById("chat");
         var text = document.getElementById("text");
-
+        // Handle WebSocket events
         ws.onopen = function() {
             console.log('WebSocket connection open.');
         };
-
-        ws.onmessage = function (msg) {
-            var messageData = msg.data.split("> ");
-            var username = messageData[0].replace("<", "").replace(">", "");
-            var message = messageData[1]; // extract the message content
-
-            var div = document.createElement("div");
-            if (username === name) {
-                div.className = "chat-message self-end bg-blue-900 text-white max-w-xs rounded-lg px-3 py-0.5 text-lg";
-            } else {
-                div.className = "chat-message self-start bg-blue-500 text-white max-w-xs rounded-lg px-3 py-0.5 text-lg";
+    
+        ws.onmessage = function(event) {
+            try {
+                const messageData = JSON.parse(event.data);
+                console.log("Received message:", messageData);
+    
+                
+                const username = messageData.username;
+                const content = messageData.content;
+    
+                
+                if (username === undefined || content === undefined) {
+                    console.error("Error: Undefined username or content.");
+                    return;
+                }
+    
+                addMessage(username, content);
+            } catch (error) {
+                console.error('Error parsing message:', error);
             }
-            div.innerHTML = `<span class="text-xs text-gray-400 font-semibold">${username}</span><br>${message}`;
-            chat.appendChild(div);
-            chat.scrollTop = chat.scrollHeight; // scroll to bottom
         };
-
-        text.onkeydown = function (e) {
-            if (e.keyCode === 13 && text.value !== "") {
+    
+        ws.onclose = function() {
+            console.log('WebSocket connection closed.');
+        };
+    
+        ws.onerror = function(error) {
+            console.error('WebSocket error:', error);
+        };
+    
+        
+        document.getElementById('text').onkeydown = function(event) {
+            if (event.key === 'Enter' && this.value.trim() !== '') {
                 sendMessage();
             }
         };
-
-        document.getElementById("send").onclick = function () {
-            if (text.value !== "") {
+    
+        document.getElementById('send').onclick = function() {
+            if (document.getElementById('text').value.trim() !== '') {
                 sendMessage();
             }
         };
-
+    
+        
         function sendMessage() {
-            var message = text.value;
-            ws.send("<" + name + "> " + message);
-            text.value = "";
-            chat.scrollTop = chat.scrollHeight; // scroll to bottom
+            const message = {
+                Channel: channelName,
+                Username: userName,
+                Content: document.getElementById('text').value
+            };
+            ws.send(JSON.stringify(message));
+            document.getElementById('text').value = '';
+            document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight; // Scroll to bottom
+        }
+    
+        
+        function addMessage(username, message) {
+            const chat = document.getElementById('chat');
+            const div = document.createElement('div');
+            div.className = username === userName 
+                ? 'chat-message self-end bg-blue-900 text-white max-w-xs rounded-lg px-3 py-0.5 text-lg'
+                : 'chat-message self-start bg-blue-500 text-white max-w-xs rounded-lg px-3 py-0.5 text-lg';
+            div.innerHTML = `<span class="text-xs text-gray-400 font-semibold">${sanitize(username)}</span><br>${sanitize(message)}`;
+            chat.appendChild(div);
+            chat.scrollTop = chat.scrollHeight; // Scroll to bottom
+        }
+    
+        function sanitize(input) {
+            const div = document.createElement('div');
+            div.textContent = input;
+            return div.innerHTML;
         }
     </script>
+    
 </body>
 </html>

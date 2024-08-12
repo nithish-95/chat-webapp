@@ -25,3 +25,9 @@ go.work.sum
 *.pem
 # Bin
 bin/
+
+#sql/.db
+*.sql
+*.db
+
+*.gitignore
