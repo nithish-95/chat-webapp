@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"log"
@@ -13,6 +14,9 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/gorilla/websocket"
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/nithish-95/chat-webapp/cleaner"
+	"github.com/nithish-95/chat-webapp/database"
+	"github.com/nithish-95/chat-webapp/models"
 )
 
 var (
@@ -27,7 +31,7 @@ var (
 	}
 	register   = make(chan Client)
 	unregister = make(chan Client)
-	broadcast  = make(chan Message)
+	broadcast  = make(chan models.Message)
 )
 
 type Channel struct {
@@ -40,141 +44,6 @@ type Client struct {
 	Conn     *websocket.Conn
 	Username string
 	Channel  string
-}
-
-type Message struct {
-	Channel  string    `json:"channel"`
-	Username string    `json:"username"`
-	Content  string    `json:"content"`
-	Time     time.Time `json:"time"`
-}
-
-// Initialize the SQLite database and create the messages table
-func initDatabase() *sql.DB {
-	db, err := sql.Open("sqlite3", "./chat_messages.db")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	createTableSQL := `CREATE TABLE IF NOT EXISTS messages (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		channel TEXT NOT NULL,
-		username TEXT NOT NULL,
-		message TEXT NOT NULL,
-		time DATETIME DEFAULT CURRENT_TIME
-	);`
-
-	statement, err := db.Prepare(createTableSQL)
-	if err != nil {
-		log.Fatal(err)
-	}
-	statement.Exec()
-
-	return db
-}
-
-// Clear the Database for closed channels
-func clearDatabase(db *sql.DB) {
-	mutex.Lock()
-	defer mutex.Unlock()
-
-	log.Println("Clearing the Database for closed channels")
-
-	transaction, err := db.Begin()
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer transaction.Rollback()
-
-	// Retrieve active channels from cache
-	keys := activeChannels.Keys(false)
-	activeChannelsSet := make(map[string]bool)
-	for _, key := range keys {
-		activeChannelsSet[key.(string)] = true
-	}
-
-	// Delete messages for channels that are not in the activeChannelsSet
-	deleteSQL := `DELETE FROM messages WHERE channel = ?`
-	rows, err := transaction.Query("SELECT DISTINCT channel FROM messages")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		var channel string
-		if err := rows.Scan(&channel); err != nil {
-			log.Fatal(err)
-		}
-
-		if _, active := activeChannelsSet[channel]; !active {
-			log.Printf("Deleting messages from channel: %s", channel)
-			_, err = transaction.Exec(deleteSQL, channel)
-			if err != nil {
-				log.Fatal(err)
-			}
-		}
-	}
-
-	if err = transaction.Commit(); err != nil {
-		log.Fatal(err)
-	}
-}
-
-// Periodically clear the database
-func startDatabaseCleanup(db *sql.DB) {
-	ticker := time.NewTicker(5 * time.Minute)
-	go func() {
-		for range ticker.C {
-			clearDatabase(db)
-		}
-	}()
-}
-
-// Insert a message into the messages table
-func insertMessage(db *sql.DB, channel, username, message string) {
-	mutex.Lock()
-	defer mutex.Unlock()
-	log.Printf("Inserting message: channel=%s, username=%s, message=%s", channel, username, message)
-	insertSQL := `INSERT INTO messages(channel, username, message, time) VALUES (?, ?, ?, ?)`
-	statement, err := db.Prepare(insertSQL)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	_, err = statement.Exec(channel, username, message, time.Now())
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
-// Retrieve old messages for a specific channel
-func getMessages(db *sql.DB, channel string) ([]Message, error) {
-	var messages []Message
-
-	query := `SELECT username, message, time FROM messages WHERE channel = ? AND datetime(time) >= datetime('now', '-5 minutes', 'localtime') ORDER BY time ASC`
-
-	rows, err := db.Query(query, channel)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		var username, message string
-		var timestamp time.Time
-		if err := rows.Scan(&username, &message, &timestamp); err != nil {
-			return nil, err
-		}
-		messages = append(messages, Message{
-			Channel:  channel,
-			Username: username,
-			Content:  message,
-			Time:     timestamp,
-		})
-	}
-
-	return messages, nil
 }
 
 func GetIndexPage(w http.ResponseWriter, r *http.Request) {
@@ -330,13 +199,21 @@ func websocketHandler(db *sql.DB) http.HandlerFunc {
 func main() {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
+	ctx := context.Background()
 
 	// Initialize the database
-	db := initDatabase()
-	defer db.Close()
+	dao, err := database.NewSQLlite("./chat_messages.db")
+	if err != nil {
+		log.Fatalf("Cannot open conn to db +v", err)
+	}
+	err = dao.InitDatabase(ctx)
+	if err != nil {
+		log.Fatalf("error calling initDatabase +v", err)
+	}
+	defer dao.Close(ctx)
 
-	// Start the database cleanup as a goroutine
-	go startDatabaseCleanup(db)
+	c := cleaner.NewTTL(dao, 5*time.Minute)
+	go c.StartCleaning()
 
 	go handleConnections(db)
 

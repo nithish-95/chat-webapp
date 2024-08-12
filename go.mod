@@ -1,4 +1,4 @@
-module chat-webapp
+module github.com/nithish-95/chat-webapp
 
 go 1.21.7
 
