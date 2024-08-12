@@ -123,7 +123,7 @@ func clearDatabase(db *sql.DB) {
 
 // Periodically clear the database
 func startDatabaseCleanup(db *sql.DB) {
-	ticker := time.NewTicker(1 * time.Minute)
+	ticker := time.NewTicker(5 * time.Minute)
 	go func() {
 		for range ticker.C {
 			clearDatabase(db)
