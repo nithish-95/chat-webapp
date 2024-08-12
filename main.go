@@ -80,6 +80,12 @@ func clearDatabase(db *sql.DB) {
 
 	log.Println("Clearing the Database for closed channels")
 
+	transaction, err := db.Begin()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer transaction.Rollback()
+
 	// Retrieve active channels from cache
 	keys := activeChannels.Keys(false)
 	activeChannelsSet := make(map[string]bool)
@@ -89,7 +95,7 @@ func clearDatabase(db *sql.DB) {
 
 	// Delete messages for channels that are not in the activeChannelsSet
 	deleteSQL := `DELETE FROM messages WHERE channel = ?`
-	rows, err := db.Query("SELECT DISTINCT channel FROM messages")
+	rows, err := transaction.Query("SELECT DISTINCT channel FROM messages")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -103,21 +109,21 @@ func clearDatabase(db *sql.DB) {
 
 		if _, active := activeChannelsSet[channel]; !active {
 			log.Printf("Deleting messages from channel: %s", channel)
-			statement, err := db.Prepare(deleteSQL)
-			if err != nil {
-				log.Fatal(err)
-			}
-			_, err = statement.Exec(channel)
+			_, err = transaction.Exec(deleteSQL, channel)
 			if err != nil {
 				log.Fatal(err)
 			}
 		}
 	}
+
+	if err = transaction.Commit(); err != nil {
+		log.Fatal(err)
+	}
 }
 
 // Periodically clear the database
 func startDatabaseCleanup(db *sql.DB) {
-	ticker := time.NewTicker(5 * time.Minute)
+	ticker := time.NewTicker(1 * time.Minute)
 	go func() {
 		for range ticker.C {
 			clearDatabase(db)
