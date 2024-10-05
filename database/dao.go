@@ -7,7 +7,7 @@ import (
 	"github.com/nithish-95/chat-webapp/models"
 )
 
-type Dao interface {
+type DAO interface {
 	InitDatabase(ctx context.Context) error
 	InsertMessage(ctx context.Context, channel, username, message string) error
 	GetMessages(ctx context.Context, channel string) ([]models.Message, error)

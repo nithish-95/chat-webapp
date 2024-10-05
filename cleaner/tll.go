@@ -8,12 +8,11 @@ import (
 )
 
 type ttl struct {
-	dao    database.Dao
+	dao    database.DAO
 	ticker *time.Ticker
 	d      time.Duration
 }
 
-// Clear the Database for closed channels
 // StartCleaning implements Cleaner.
 func (t *ttl) StartCleaning() error {
 	for range t.ticker.C {
@@ -22,7 +21,8 @@ func (t *ttl) StartCleaning() error {
 	return nil
 }
 
-func NewTTL(dao database.Dao, d time.Duration) Cleaner {
+// NewTTL creates a new instance of ttl with a given DAO and duration.
+func NewTTL(dao database.DAO, d time.Duration) Cleaner {
 	t := time.NewTicker(d)
-	return &ttl{dao: dao, ticker: t}
+	return &ttl{dao: dao, ticker: t, d: d}
 }
