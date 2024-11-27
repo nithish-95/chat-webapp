@@ -1,4 +1,4 @@
-Certainly! Let's break down the code step by step to help you understand how it works.
+This is a web Chat Application that I created from the scratch using Golang and its Packages.
 
 ### 1. Importing Packages
 ```go
