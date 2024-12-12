@@ -1,4 +1,4 @@
-This is a web Chat Application that I created from the scratch using Golang and its Packages.
+
 
 ### 1. Importing Packages
 ```go
