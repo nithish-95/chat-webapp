@@ -4,7 +4,7 @@ import (
 	"log"
 	"time"
 
-	"chat-webapp/storage"
+	"github.com/nithish-95/chat-webapp/storage"
 )
 
 // Message struct represents a chat message.

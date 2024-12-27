@@ -1,8 +1,8 @@
 package channels
 
 import (
-	"chat-webapp/messages"
-	"chat-webapp/storage"
+	"github.com/nithish-95/chat-webapp/messages"
+	"github.com/nithish-95/chat-webapp/storage"
 	"log"
 	"sync"
 	"time"

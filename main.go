@@ -1,10 +1,10 @@
 package main
 
 import (
-	"chat-webapp/channels"
-	"chat-webapp/messages"
-	"chat-webapp/storage"
 	"encoding/json"
+	"github.com/nithish-95/chat-webapp/channels"
+	"github.com/nithish-95/chat-webapp/messages"
+	"github.com/nithish-95/chat-webapp/storage"
 	"log"
 	"net/http"
 	"sync"
