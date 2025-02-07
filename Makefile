@@ -1,7 +1,7 @@
 all: clean build run
 
 build:
-	go build -o bin/chatapp .
+	CGO_ENABLED=1 go build -o bin/chatapp .
 run: 
 	bin/chatapp
 clean:
